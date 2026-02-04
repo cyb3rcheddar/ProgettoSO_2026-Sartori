@@ -8,15 +8,15 @@
 
 #include "errExit.h"
 
-/*
-* @semid id del semaforo su cui fare l'operazione
-*/
+
+// @semid id
+
 int waitSem(int semid) {
     struct sembuf operation;
     
-    operation.sem_num = 0;    // Numero del semaforo nel set
-    operation.sem_op = -1;          // Decrementa di 1
-    operation.sem_flg = SEM_UNDO;   // Annulla operazione se processo termina
+    operation.sem_num = 0;          
+    operation.sem_op = -1;          
+    operation.sem_flg = SEM_UNDO;   
 
     if (semop(semid, &operation, 1) == -1) {
         errExit("<Semaforo> Wait Fallita");
@@ -25,15 +25,15 @@ int waitSem(int semid) {
     return 0;
 }
 
-/*
-* @semid id del semaforo su cui fare l'operazione
-*/
+
+// @semid id
+
 int signalSem(int semid) {
     struct sembuf operation;
     
-    operation.sem_num = 0;    // Numero del semaforo nel set
-    operation.sem_op = 1;           // Incrementa di 1
-    operation.sem_flg = SEM_UNDO;   // Annulla operazione se processo termina
+    operation.sem_num = 0;          
+    operation.sem_op = 1;           
+    operation.sem_flg = SEM_UNDO;   
 
     if (semop(semid, &operation, 1) == -1) {
         errExit("<Semaforo> Signal Fallita");
@@ -45,18 +45,18 @@ int signalSem(int semid) {
 
 int sem_init(key_t key, int nsems) {
     int semid;
-    // Crea il set di semafori
+    // Create set
     semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0666);
     
     if (semid == -1) {
         if (errno == EEXIST) {
-            semid = semget(key, nsems, 0666);       // Set già esistente, ottieni l'ID
+            semid = semget(key, nsems, 0666);       // Get id
         } else {
             errExit("<Semaforo> SemGet Fallita");
             return -1;
         }
     } else {
-        // Set appena creato, inizializza i valori
+        // Value initialization
         for (int i = 0; i < nsems; i++) {
             if (semctl(semid, i, SETVAL, 1) == -1) {
                 errExit("<Semaforo> SemCtl Fallita");
