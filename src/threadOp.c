@@ -20,7 +20,7 @@
 
 // Structure for shared data among threads
 struct ThreadData {
-    uuid_t threadId; // condiviso tra tutti i threa d, e l'id della fifo su cui i thread fanno la receive , va definito dal server prima della creazione del thread
+    uuid_t threadId; // FIFO ID, shared between all threads. Defined by server before thread creation.
 };
 
 void *threadOp(void *arg){
@@ -36,21 +36,21 @@ void *threadOp(void *arg){
     struct ThreadData *threadData = (struct ThreadData *)arg;
 
     uuid_t serverId;
-    memset(serverId, 0, sizeof(uuid_t)); // server id settato a 0
+    memset(serverId, 0, sizeof(uuid_t)); // Server ID set to 0 (null UUID)
 
     msgWrite.messageType = 201;
     msgWrite.ticketNumber = 0;
     msgWrite.status = 200;
     memcpy(msgWrite.senderId, threadData->threadId, sizeof(uuid_t));
     memcpy(msgWrite.destinationId, serverId, sizeof(uuid_t));
-    memcpy(msgWrite.data, "thread creato", strlen("thread creato") + 1);
-    send(&msgWrite);                // scrive al server thread creato
+    memcpy(msgWrite.data, "thread created", strlen("thread created") + 1);
+    send(&msgWrite);                // Send message to server that thread is created
 
     
-    key_t key = 1000;       // chiave dei semafori per i thread
-    int semaforoId = sem_init(key,1);       // richiedo un semaforo data la key (in creat : prendi o crea)
+    key_t key = 1000;       // Semaphore key for threads
+    int semaforoId = sem_init(key,1);       // Request semaphore using key (on create: take or create)
     if(semaforoId == -1){
-        errExit("<Thread> Get semaforo fallita");
+        errExit("<Thread> Failed to get semaphore");
     }
     do{
         waitSem(semaforoId);
@@ -66,7 +66,7 @@ void *threadOp(void *arg){
                 msgWrite.ticketNumber = msgRead.ticketNumber;
                 memcpy(msgWrite.data, "thread ticket assign", strlen("thread ticket assign") + 1);
                 msgWrite.status = 200;
-                send(&msgWrite);                    // conferma presa in carico del ticket
+                send(&msgWrite);                    // Confirmation of work assignment for ticket
             
                 memset(hash, 0, sizeof(hash));
                 memset(char_hash, 0, sizeof(char_hash));
@@ -81,7 +81,7 @@ void *threadOp(void *arg){
                 msgWrite.ticketNumber = msgRead.ticketNumber;
                 memcpy(msgWrite.destinationId, serverId, sizeof(uuid_t));
                 memcpy(msgWrite.data, char_hash, sizeof(char_hash));
-                sleep(10);      // hashinng e troppo veloce , lo rallento un po per vededere se funziona lo scheduling
+                sleep(10);      // Hashing is too fast, slowing it down to see if scheduling works
                 clock_gettime(CLOCK_MONOTONIC, &end);
                 elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
 

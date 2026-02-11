@@ -1,5 +1,5 @@
 #ifndef _REQUEST_RESPONSE_HH
-#define _REQUEST_RESPONSE_HH // DO NOT TUCHIT SIIR *INDIAN ACCENT*
+#define _REQUEST_RESPONSE_HH
 
 #define LEN 256
 #define baseFIFOpath "./obj/FIFO-"
@@ -9,8 +9,8 @@
 
 struct Message {
     int messageType;
-    uuid_t senderId;      // definiti con uuid
-    uuid_t destinationId; // definiti con uuid
+    uuid_t senderId;      // uuid defined
+    uuid_t destinationId; // uuid defined
     int ticketNumber;
     int status;
     char data[LEN];
@@ -18,29 +18,29 @@ struct Message {
 
 /*
  * message client types :
- * 1: Client filePathRequest        // assegna al server il path del file su cui calcolare SHA
- * 2: Client Ticket Status Request  // chiede lo stato o la posizione in coda
- * 3: Client FINACK                 // chiude la connessione tranquillamente
- * 5: Same Client to Same Client    // quando il figlio parla con il processo padre
+ * 1: Client filePathRequest        // assigns to server the path of the file for SHA calculation
+ * 2: Client Ticket Status Request  // requests the status or position in queue
+ * 3: Client FINACK                 // closes the connection gracefully
+ * 5: Same Client to Same Client    // when child talks to parent process
  *
  * message server types :
- * 101: Server filePath confirm     // ACK dice ok ho ricevuto il path adesso (non?) calcolo lo SHA (non e ancora finito) e restituisce il ticket del processo SHA
- * 102: Server Ticket Status        // ritorna lo stato del thread che sta calcolando la SHA del client che richiede
- * 103: Server fileFirm response    // quando il server ha finito di calcolare lo SHA manda la impronta al client, nello status il numero di ticket
- * 104: EasterEgg                   // TODO:
- * 105: Server to Server            // quando il figlio parla con il processo padre
- * 106: Server assegna ad un thread un filepath per calcolo SHA
+ * 101: Server filePath confirm     // ACK confirms receipt of path, now (not?) calculating SHA (not finished yet) and returns ticket of SHA process
+ * 102: Server Ticket Status        // returns the status of the thread that is calculating the SHA of the requesting client
+ * 103: Server fileFirm response    // when server finishes calculating SHA sends the fingerprint to client, status contains ticket number
+ * 104: Undefined value             // TODO
+ * 105: Server to Server            // when child talks to parent process
+ * 106: Server assigns to thread a filepath for SHA calculation
  * 
  * message thread types : 
- * 201: thread conferma la propria esistenza al server
- * 202: thread risponde con conferma presa in carico del lavoro
- * 203: thread consegna al server l'hash calcolato
+ * 201: thread confirms its existence to server
+ * 202: thread responds with confirmation of work assignment
+ * 203: thread delivers to server the calculated hash
  * 
  * Status types :
  * 200: ok
- * 201: ticket in elaborazione
- * 404: file non trovato
- * 405: in elaborazione
+ * 201: ticket in processing
+ * 404: file not found
+ * 405: in processing
  * 406: in cache 
 */
 
@@ -51,9 +51,9 @@ void receive(uuid_t idFifo, struct Message *msg);
 
 /*
  
-Sì, puoi generare un UUID in C. Il modo più semplice su Linux è usare la libreria libuuid, 
-che fornisce funzioni per creare e gestire UUID.
-Esempio di utilizzo:
+Yes, you can generate a UUID in C. The simplest way on Linux is to use the libuuid library,
+which provides functions to create and manage UUIDs.
+Usage example:
 
 #include <uuid/uuid.h>
 #include <stdio.h>
@@ -69,7 +69,7 @@ int main() {
     return 0;
 }
 
-Per compilare, aggiungi -luuid:
-gcc tuo_file.c -luuid -o tuo_programma
+To compile, add -luuid:
+gcc your_file.c -luuid -o your_program
 
 */
