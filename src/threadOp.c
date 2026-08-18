@@ -20,7 +20,7 @@
 
 // Structure for shared data among threads
 struct ThreadData {
-    uuid_t threadId; // FIFO ID, shared between all threads. Defined by server before thread creation.
+    uuid_t threadId; // Shared among all threads, is the FIFO ID on which threads do receive, must be defined by server before thread creation
 };
 
 void *threadOp(void *arg){
@@ -36,7 +36,7 @@ void *threadOp(void *arg){
     struct ThreadData *threadData = (struct ThreadData *)arg;
 
     uuid_t serverId;
-    memset(serverId, 0, sizeof(uuid_t)); // Server ID set to 0 (null UUID)
+    memset(serverId, 0, sizeof(uuid_t)); // Server ID set to 0
 
     msgWrite.messageType = 201;
     msgWrite.ticketNumber = 0;
@@ -44,11 +44,11 @@ void *threadOp(void *arg){
     memcpy(msgWrite.senderId, threadData->threadId, sizeof(uuid_t));
     memcpy(msgWrite.destinationId, serverId, sizeof(uuid_t));
     memcpy(msgWrite.data, "thread created", strlen("thread created") + 1);
-    send(&msgWrite);                // Send message to server that thread is created
+    send(&msgWrite);                // Writes to server that thread was created
 
     
     key_t key = 1000;       // Semaphore key for threads
-    int semaforoId = sem_init(key,1);       // Request semaphore using key (on create: take or create)
+    int semaforoId = sem_init(key,1);       // Request a semaphore given the key (on create: take or create)
     if(semaforoId == -1){
         errExit("<Thread> Failed to get semaphore");
     }
@@ -57,16 +57,16 @@ void *threadOp(void *arg){
         receive(threadData->threadId, &msgRead);
         signalSem(semaforoId);
         switch (msgRead.messageType) {
-            case 106:                   // 106: Server assegna ad un thread un filepath per calcolo SHA
-                printf("<Thread> file ricevuto : %s\n",msgRead.data);
+            case 106:                   // 106: Server assigns a filepath to a thread for SHA calculation
+                printf("<Thread> file received: %s\n",msgRead.data);
                 clock_gettime(CLOCK_MONOTONIC, &start);
 
-                // Comunico al server che inizio a lavorare
+                // Communicate to server that I am starting work
                 msgWrite.messageType = 202;
                 msgWrite.ticketNumber = msgRead.ticketNumber;
                 memcpy(msgWrite.data, "thread ticket assign", strlen("thread ticket assign") + 1);
                 msgWrite.status = 200;
-                send(&msgWrite);                    // Confirmation of work assignment for ticket
+                send(&msgWrite);                    // Confirmation of ticket assignment
             
                 memset(hash, 0, sizeof(hash));
                 memset(char_hash, 0, sizeof(char_hash));
@@ -75,22 +75,22 @@ void *threadOp(void *arg){
                 for(int i = 0; i < 32; i++) {
                     sprintf(char_hash + (i * 2), "%02x", hash[i]);
                 }
-                // invio il risultato al server che poi lo gira a client
+                // Send the result to the server which then forwards it to client
                 msgWrite.messageType = 203;
                 msgWrite.status = 200;
                 msgWrite.ticketNumber = msgRead.ticketNumber;
                 memcpy(msgWrite.destinationId, serverId, sizeof(uuid_t));
                 memcpy(msgWrite.data, char_hash, sizeof(char_hash));
-                sleep(10);      // Hashing is too fast, slowing it down to see if scheduling works
+                sleep(10);      // Hashing is too fast, slowing it down a bit to see if scheduling works
                 clock_gettime(CLOCK_MONOTONIC, &end);
                 elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-                printf("<Thread> file : %s  - DONE - Hash : %s | Tempo di elaborazione: %.3f secondi\n",msgRead.data,char_hash, elapsed);
+                printf("<Thread> file: %s - DONE - Hash: %s | Processing time: %.3f seconds\n",msgRead.data,char_hash, elapsed);
                 send(&msgWrite);
               
             break;
             default:
-                errExit("<Thread> RCV messaggio ricevuto non riconosciuto");
+                errExit("<Thread> RCV received unrecognized message");
         }
         
     }while(msgRead.messageType != 104 );

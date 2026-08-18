@@ -27,7 +27,7 @@ typedef struct node {
     struct node *next;
 } node;
 
-// Aggiunge un intero alla coda della lista
+// Add an integer to the end of the list
 void addIntToList(node **head, int value, char *path) {
     node *newNode = malloc(sizeof(node));
     if (!newNode) {
@@ -49,7 +49,7 @@ void addIntToList(node **head, int value, char *path) {
     }
 }
 
-// Rimuove la prima occorrenza di un intero dalla lista
+// Remove the first occurrence of an integer from the list
 void removeIntFromList(node **head, int value) {
     node *curr = *head, *prev = NULL;
     while (curr) {
@@ -80,29 +80,29 @@ int stringToInt(const char *str) {
 
 void printStatus(node *linkedTicketList) {
     printf("┌───────────────────────────────────────┐\n");
-    printf("│ File in elaborazione:                 │\n");
+    printf("│ Files being processed:               │\n");
     for(node *curr = linkedTicketList; curr != NULL; curr = curr->next) {
         printf("│ ◈ Ticket ID: %d - %s\t\t│\n", curr->value, curr->path);
     }
     if (linkedTicketList == NULL) {
-        printf("│ ◈ Nessun file in elaborazione\t\t│\n");
+        printf("│ ◈ No files being processed\t\t│\n");
     }
     printf("└───────────────────────────────────────┘\n");
 }
 
 void printMenu() {
     printf("┌───────────────────────────────────────┐\n");
-    printf("│ Opzioni:                              │\n");
-    printf("│ 1. Richiedi hash di path/to/file.     │\n");
-    printf("│ 2. Richiedi status di fileInCalcolo.  │\n");
-    printf("│ 3. Chiudi il client.                  │\n");
+    printf("│ Options:                              │\n");
+    printf("│ 1. Request hash of path/to/file.      │\n");
+    printf("│ 2. Request status of a ticket.        │\n");
+    printf("│ 3. Close the client.                  │\n");
     printf("└───────────────────────────────────────┘\n");
-    printf("Seleziona un'opzione: \n");
+    printf("Select an option: \n");
 }
 
 void printHash(char *hash, int ticketNumber){
     printf("┌────────────────────────────────────────────────────────────────────────┐\n");
-    snprintf(ticketInfo, sizeof(ticketInfo), "Hash calcolato per Ticket %d :", ticketNumber);
+    snprintf(ticketInfo, sizeof(ticketInfo), "Hash computed for Ticket %d :", ticketNumber);
     printf("│ %-70s │\n", ticketInfo);
     printf("│ %-70s │\n", hash);
     printf("└────────────────────────────────────────────────────────────────────────┘\n");
@@ -117,7 +117,7 @@ void cleanup(){
 }
 
 void handle_sigint(int sig) {
-    printf("\n[signal] Ricevuto SIGINT (Ctrl+C)\n");
+    printf("\n[signal] Received SIGINT (Ctrl+C)\n");
     cleanup();
     exit(0);
 }
@@ -125,7 +125,7 @@ void handle_sigint(int sig) {
 int main(int argc, char *argv[]) {
     signal(SIGINT, handle_sigint);
     printf("╔═══════════════════════════════════════╗\n");
-    printf("║          Benvenuto nel Client         ║\n");
+    printf("║          Welcome to the Client        ║\n");
     printf("╚═══════════════════════════════════════╝\n");
 
     char clientMessage [LEN];
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     node *linkedTickets = NULL;
 
     uuid_generate(clientId);
-    memset(serverId, 0, sizeof(uuid_t)); // server id settato a 0
+    memset(serverId, 0, sizeof(uuid_t)); // server id set to 0
 
     char path2ServerFIFO [LEN];
     uuid_unparse(serverId, uuid_str);
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     uuid_unparse(clientId, uuid_str);
     snprintf(path2ClientFIFO, sizeof(path2ClientFIFO), "%s%s", baseFIFOpath, uuid_str);
 
-    // [01] Creo fifo risposte x il srv (01 SRV)
+    // [01] Create response FIFO for the server (01 SRV)
     if (mkfifo(path2ClientFIFO, S_IRUSR | S_IWUSR | S_IWGRP) == -1) {
         if (errno != EEXIST)
             errExit("<Client> Error : mkfifo clientFIFO failed");
@@ -162,21 +162,21 @@ int main(int argc, char *argv[]) {
             printf("<Client> FIFO %s already exists, using it.\n", path2ClientFIFO);
     }
     else
-        printf("<Client> FIFO client : %s creata!\n", path2ClientFIFO);
+        printf("<Client> client FIFO: %s created!\n", path2ClientFIFO);
 
     printf("%-40s", "────────────────────────────────────────");
-    printf("< Ciclo numero: %d >", cont);
+    printf("< Cycle number: %d >", cont);
     printf("%-40s\n", "────────────────────────────────────────");
     printMenu();
     
-    msgRead.messageType = 5; // forzo il menu alla prima iterazione
+    msgRead.messageType = 5; // force the menu on the first iteration
     while(1 && exitCode){
 
         if(msgRead.messageType != 5){
             printf("\n");
             cont++;
             printf("%-40s", "────────────────────────────────────────");
-            printf("< Ciclo numero: %d >", cont);
+            printf("< Cycle number: %d >", cont);
             printf("%-40s\n", "────────────────────────────────────────");
             printStatus(linkedTickets);
             printMenu();
@@ -194,22 +194,22 @@ int main(int argc, char *argv[]) {
 
             send(&msgWrite);
 
-            // Chiudo il figlio
+            // Close the child
             exit(0);
         }
         }
         
 
-        // [06] Lettura della FIFO (03 SRV)
+        // [06] Read from the FIFO (03 SRV)
         receive(clientId, &msgRead);
 
 
-        // Controllo il tipo di messaggio ricevuto
-        if (msgRead.messageType == 101 && msgRead.status == 200) {      // 101: Server filePath confirm     // ACK dice ok ho ricevuto il path adesso (non?) calcolo lo SHA (non e ancora finito) e restituisce il ticket del processo SHA
+        // Check the type of the received message
+        if (msgRead.messageType == 101 && msgRead.status == 200) {      // 101: Server filePath confirm     // ACK says path received and returns the ticket for the SHA process
             addIntToList(&linkedTickets, msgRead.ticketNumber, msgRead.data);
         }
         
-        if (msgRead.messageType == 101 && msgRead.status == 406) {      // type 101 -> status 406 = path gia calcolato in precedenza , il server restituisce direttamente l'hash
+        if (msgRead.messageType == 101 && msgRead.status == 406) {      // type 101 -> status 406 = path already computed previously, the server returns the hash directly
             printHash(msgRead.data, msgRead.ticketNumber);
         }
 
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
 
         if (msgRead.messageType == 102) {
             printf("┌────────────────────────────────────────────────────────────────────────┐\n");
-            printf("│ %-70s │\n", "Stato ticket richiesto:");
+            printf("│ %-70s │\n", "Requested ticket status:");
             snprintf(ticketInfo, sizeof(ticketInfo), "◈ Ticket ID : %d", msgRead.ticketNumber);
             printf("│ %-72s │\n", ticketInfo);
             printf("│ %-70s │\n", msgRead.data);
@@ -232,16 +232,16 @@ int main(int argc, char *argv[]) {
             scelta = stringToInt(msgRead.data);
             /*
             OPTIONS:
-                1. Richiedi hash di path/to/file.
-                2. Richiedi status di fileInCalcolo.
-                3. Chiudi il client.
+                1. Request hash of path/to/file.
+                2. Request status of a ticket.
+                3. Close the client.
             */
 
             switch (scelta) {
                 case 1:
-                    // [03] Chiedo all'utente la path del file
+                    // [03] Ask the user for the file path
 
-                    printf("<Client> Dammi la Path del File su cui eseguire SHA256: \n");
+                    printf("<Client> Provide the file path to compute SHA256: \n");
                     scanf(" %s", clientMessage);
                     // Remove trailing newline if present
                     clientMessage[strcspn(clientMessage, "\n")] = 0;
@@ -257,8 +257,8 @@ int main(int argc, char *argv[]) {
 
                     break;
                 case 2:
-                    // [03] Richiedi status di fileInCalcolo
-                    printf("<Client> Inserisci il ticket: \n");
+                    // [03] Request status of a ticket
+                    printf("<Client> Enter the ticket: \n");
                     scanf(" %d", &ticket);
 
                     // [04] Creo il messaggio da inviare al server
@@ -273,12 +273,12 @@ int main(int argc, char *argv[]) {
                     scelta = 0;
                     break;
                 case 3:
-                    // Chiudi il figlio e il client
-                    printf("<Client> Chiudo il client.\n");
+                    // Close the child and the client
+                    printf("<Client> Closing client.\n");
                     exitCode = 0;
                     break;
                 default:
-                    printf("Opzione non valida.\n");
+                    printf("Invalid option.\n");
                     break;
             }
         }

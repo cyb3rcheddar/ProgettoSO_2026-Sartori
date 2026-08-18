@@ -1,5 +1,5 @@
 #ifndef _SEMAFORO_HH
-#define _SEMAFORO_HH // non sono typo DONT TOUCH
+#define _SEMAFORO_HH // not a typo - DO NOT TOUCH
 
 #include <sys/types.h>
 #include <sys/sem.h>
