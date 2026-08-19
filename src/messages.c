@@ -61,16 +61,16 @@ void send(struct Message *message){
             //printf("[MSG DEBUG] SND msg Client <-> Client \n");
             break;
         case 101:
-            //printf("[MSG DEBUG] Invio risposta dal server in merito alla richiesta del file\n" );
+            //printf("[MSG DEBUG] Sending response from server regarding file request\n" );
             break;
         case 102:
-            //printf("[MSG DEBUG] Invio risposta dal server in merito al ticket status\n" );
+            //printf("[MSG DEBUG] Sending response from server regarding ticket status\n" );
             break;
         case 103:
-            //printf("[MSG DEBUG] Invio risposta dal server con hash del file\n");
+            //printf("[MSG DEBUG] Sending response from server with file hash\n");
             break;
         case 104:
-            //printf("[MSG DEBUG] Invio server kill thread\n");
+            //printf("[MSG DEBUG] Sending server kill thread\n");
             break;
         case 105:
             //printf("[MSG DEBUG] SND msg Server <-> Server \n");
@@ -78,11 +78,11 @@ void send(struct Message *message){
         case 106: // message that the server uses to communicate with threads
             //printf("[MSG DEBUG] SND msg Server <-> Server \n");
             break;
-        case 201: // messagio thread ok
+        case 201: // message thread ok
             break;
-        case 202: // messagio thread confirm job
+        case 202: // message thread confirm job
             break;
-        case 203: // messagio thread hash done
+        case 203: // message thread hash done
             break;
         default:
             fprintf(stderr, "<Error> Send : Unknown message type: %d\n", message->messageType);
