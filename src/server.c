@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
 
     if (mkfifo(path2ServerFIFO, S_IRUSR | S_IWUSR | S_IWGRP) == -1) {
         if (errno != EEXIST){
-            errExit("mkfifo failed");
+            errExit("<Server> Error : mkfifo failed");
         } else {
             printf("<Server> FIFO %s already exists, using it.\n", path2ServerFIFO);
         }
@@ -389,7 +389,7 @@ int main(int argc, char *argv[]) {
                     case -2: // ticket already in queue
                         msgWrite.status = 405;
                         msgWrite.ticketNumber = ticketGiven;
-                        strcpy(msgWrite.data, "path received, added to request queue");
+                        strcpy(msgWrite.data, msgRead.data);
                         if (getTicketById(ticketGiven, head, clonedNode) == 0) {
                             addClient(&clonedNode->clientHead, msgRead.senderId);
                         }

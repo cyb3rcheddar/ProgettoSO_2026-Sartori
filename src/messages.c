@@ -142,6 +142,7 @@ void receive(uuid_t idFifo, struct Message *msg){
     }
     fflush(stdout);
    
+    switch (msg->messageType) {
         case 1:
             //printf("[MSG DEBUG] Received filePath request at %s\n", fifoPath);
             break;

@@ -29,6 +29,12 @@ typedef struct node {
 
 // Add an integer to the end of the list
 void addIntToList(node **head, int value, char *path) {
+    for (node *curr = *head; curr != NULL; curr = curr->next) {
+        if (curr->value == value) {
+            return;
+        }
+    }
+
     node *newNode = malloc(sizeof(node));
     if (!newNode) {
         perror("malloc failed");
@@ -80,7 +86,7 @@ int stringToInt(const char *str) {
 
 void printStatus(node *linkedTicketList) {
     printf("┌───────────────────────────────────────┐\n");
-    printf("│ Files being processed:               │\n");
+    printf("│ Files being processed:                │\n");
     for(node *curr = linkedTicketList; curr != NULL; curr = curr->next) {
         printf("│ ◈ Ticket ID: %d - %s\t\t│\n", curr->value, curr->path);
     }
@@ -98,6 +104,14 @@ void printMenu() {
     printf("│ 3. Close the client.                  │\n");
     printf("└───────────────────────────────────────┘\n");
     printf("Select an option: \n");
+}
+
+void readLine(char *buffer, size_t bufferSize) {
+    if (fgets(buffer, bufferSize, stdin) == NULL) {
+        buffer[0] = '\0';
+        return;
+    }
+    buffer[strcspn(buffer, "\n")] = '\0';
 }
 
 void printHash(char *hash, int ticketNumber){
@@ -189,7 +203,7 @@ int main(int argc, char *argv[]) {
             msgWrite.messageType = 5;
             msgWrite.status = 0;
 
-            scanf(" %s", scelta);
+            readLine(scelta, sizeof(scelta));
             snprintf(msgWrite.data, sizeof(msgWrite.data), "%s", scelta);
 
             send(&msgWrite);
@@ -205,7 +219,9 @@ int main(int argc, char *argv[]) {
 
 
         // Check the type of the received message
-        if (msgRead.messageType == 101 && msgRead.status == 200) {      // 101: Server filePath confirm     // ACK says path received and returns the ticket for the SHA process
+        if (msgRead.messageType == 101 &&
+            (msgRead.status == 200 || msgRead.status == 405)) {
+            // The server returns the original path and ticket for new or duplicate requests.
             addIntToList(&linkedTickets, msgRead.ticketNumber, msgRead.data);
         }
         
@@ -242,9 +258,17 @@ int main(int argc, char *argv[]) {
                     // [03] Ask the user for the file path
 
                     printf("<Client> Provide the file path to compute SHA256: \n");
-                    scanf(" %s", clientMessage);
-                    // Remove trailing newline if present
-                    clientMessage[strcspn(clientMessage, "\n")] = 0;
+                    readLine(clientMessage, sizeof(clientMessage));
+                    if (clientMessage[0] == '\0') {
+                        printf("<Client> File path cannot be empty.\n");
+                        break;
+                    }
+
+                    char resolvedPath[LEN];
+                    if (realpath(clientMessage, resolvedPath) != NULL) {
+                        snprintf(clientMessage, sizeof(clientMessage), "%s", resolvedPath);
+                    }
+
                     // [04] Creo il messaggio da inviare al server
                     msgWrite.messageType = 1;
                     msgWrite.status = 0;
@@ -259,7 +283,12 @@ int main(int argc, char *argv[]) {
                 case 2:
                     // [03] Request status of a ticket
                     printf("<Client> Enter the ticket: \n");
-                    scanf(" %d", &ticket);
+                    char ticketInput[32];
+                    readLine(ticketInput, sizeof(ticketInput));
+                    if (sscanf(ticketInput, "%d", &ticket) != 1 || ticket <= 0) {
+                        printf("<Client> Invalid ticket number.\n");
+                        break;
+                    }
 
                     // [04] Creo il messaggio da inviare al server
                     msgWrite.messageType = 2;
